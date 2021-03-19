@@ -10,6 +10,11 @@
 </head>
 <body>
     <hr>
+    <h4>Login</h4>
+    <input type="email" id="email" name="email" placeholder="aaa@abc.com"><br>
+    <input type="password" id="password" name="password" placeholder="********"><br>
+    <button onclick="login()">Entrar</button>
+    <hr>
     <h4>Lista de games</h4>
     <ul id="games"></ul>
     <hr>
@@ -29,6 +34,28 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
 
+    const axiosConfig = {
+        headers: {
+            Authorization: "Bearer " + localStorage.getItem('token')
+        }
+    }
+
+    function login() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        axios.post('http://localhost:3000/auth', { email, password })
+            .then(res => {
+                const token = res.data.token;
+                localStorage.setItem('token', token);
+                axiosConfig.headers.Authorization = "Bearer" + localStorage.getItem('token');
+            })
+            .catch(err => {
+                alert('Login inválido!');
+            });
+    }
+
+
     function createGame() {
         const titleInput = document.getElementById('title');
         const yearInput = document.getElementById('year');
@@ -40,7 +67,7 @@
             price: priceInput.value
         }
 
-        axios.post('http://localhost:3000/game', game)
+        axios.post('http://localhost:3000/game', game, axiosConfig)
             .then(res => {
                 if (res.status == 200) {
                     alert('Game cadastrado!');
@@ -53,17 +80,16 @@
 
     function deleteGame(listItem) {
         const id = listItem.getAttribute('data-id');
-        axios.delete('http://localhost:3000/game/'+id)
+        axios.delete('http://localhost:3000/game/'+id, axiosConfig)
             .then(res => {
                 alert('Game deletado!');
             })
             .catch(err => {
                 console.log(err);
-            });
+            })
     }
 
     function loadForm(listItem) {
-        console.log(listItem);
         const id = listItem.getAttribute('data-id');
         const title = listItem.getAttribute('data-title');
         const year = listItem.getAttribute('data-year');
@@ -86,7 +112,7 @@
             price: priceInput.value
         }
 
-        axios.put('http://localhost:3000/game/'+idInput.value, game)
+        axios.put('http://localhost:3000/game/'+idInput.value, game, axiosConfig)
             .then(res => {
                 if (res.status == 200) {
                     alert('Game atualizado!');
@@ -97,12 +123,13 @@
             });
     }
 
-    axios.get('http://localhost:3000/games')
+    axios.get('http://localhost:3000/games', axiosConfig)
         .then(res => {
-            const games = res.data;
+            console.log(res.data);
+            const games = res.data.games;
             const list = document.getElementById('games');
 
-            games.forEach(game => {
+            games.forEach((game) => {
                 const item = document.createElement('li');
 
                 item.setAttribute("data-id", game.id);
